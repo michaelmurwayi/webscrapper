@@ -3,9 +3,11 @@ from bs4 import BeautifulSoup
 import json
 import urllib
 import re
+import db
 
 # function to build URI
 def get_job_url(base_url):
+    # scrap hospitality link from home page job category
     page = requests.get(base_url)
     if page.status_code == 200:
         soup = BeautifulSoup(page.content, "html.parser")
@@ -19,20 +21,53 @@ def get_job_url(base_url):
     return url
 
 
-def web_scrap_job_links(url):
+def web_scrap_job_links(pagination_list):
+    # get list of all jobs on the page
     job_links = []
-    page = requests.get(URL)
-    if page.status_code == 200:
-        soup = BeautifulSoup(page.content, "html.parser")
-        div = soup.find("div", attrs={"class": "fusion-posts-container"})
-        for links in div.find_all("a"):
-            job_links.append(links.get("href"))
+    for URL in pagination_list:
+        page = requests.get(URL)
+        if page.status_code == 200:
+            soup = BeautifulSoup(page.content, "html.parser")
+            div = soup.find("div", attrs={"class": "fusion-posts-container"})
+            for links in div.find_all("a"):
+                job_links.append(links.get("href"))
+                # print(job_links)
     return job_links
 
 
+def get_page_pagination(pagination_list):
+    # get all paginated pages in hospitatlity link
+    new = get_next_page(pagination_list[-1], pagination_list)
+    return "done"
+
+
+def get_next_page(URL, pagination_list):
+    # import ipdb
+
+    # ipdb.set_trace()
+    page = requests.get(URL)
+    if page.status_code == 200:
+        soup = BeautifulSoup(page.content, "html.parser")
+        try:
+            next_page_url = soup.find("a", attrs={"class": "pagination-next"}).get(
+                "href"
+            )
+            pagination_list.append(next_page_url)
+            get_page_pagination(pagination_list)
+        except Exception:
+            # print(pagination_list)
+            # web_scrap_job_links(pagination_list)
+            return pagination_list
+
+    return pagination_list
+
+
 def qualifications_scrapping(URL):
+    URL = get_job_url(URL)
+    pagination_links = []
+    pagination_list = get_next_page(URL, pagination_links)
     # get lists of all hospitality jobs available
-    job_links = web_scrap_job_links(URL)
+    job_links = web_scrap_job_links(pagination_list)
     # Get all individual links from link
     # make a request to get page data
     data = []
@@ -43,6 +78,7 @@ def qualifications_scrapping(URL):
         if page.status_code == 200:
             soup = BeautifulSoup(page.content, "html.parser")
             try:
+
                 qualification_list = soup.find(id="content").find_all("ul")[1].text
                 results = {
                     "url": link,
@@ -53,10 +89,12 @@ def qualifications_scrapping(URL):
                 results = {"url": link, "Qualification": "Problem with this link"}
         else:
             print("something went wrong, please check provided URL")
-    print(data)
+            data = {}
+
+    return data
 
 
-if __name__ == "__main__":
-    base_url = "https://www.careerpointkenya.co.ke"
-    URL = get_job_url(base_url)
-    qualifications_scrapping(URL)
+# if __name__ == "__main__":
+#     base_url = "https://www.careerpointkenya.co.ke"
+
+#     data = qualifications_scrapping(URL)
