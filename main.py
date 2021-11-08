@@ -1,7 +1,7 @@
 import sys
 import requests
 import db
-import brighterMondayScrapper
+from brightMondayScrapper import qualifications_scrapping
 import careersPointScrapper
 import jobsMagScrapper
 
@@ -31,24 +31,23 @@ def scrap_data(url):
     # pick which module to use based on hostname provided
     if host_name == "brightermonday":
         # brighter monday scrapper module
-        data = brighterMondayScrapper.qualifications_scrapping(url)
-        save_to_db(url, data)
-
+        data = qualifications_scrapping(url)
+        # save_to_db(url, data)
         return data
 
     elif host_name == "careerpointkenya":
         #  use careers point scrapper module
         data = careersPointScrapper.qualifications_scrapping(url)
-        save_to_db(url, data)
+        # save_to_db(url, data)
 
         return data
 
-    elif host_name == "myjobmag":
-        # use my job mag scrapper module
-        data = jobsMagScrapper.qualifications_scrapping(url)
-        save_to_db(url, data)
+    # elif host_name == "myjobmag":
+    #     # use my job mag scrapper module
+    #     data = jobsMagScrapper.qualifications_scrapping(url)
+    #     save_to_db(url, data)
 
-        return data
+    #     return data
 
     else:
         print("no module yet for this website. We are working on it")
@@ -68,8 +67,7 @@ def save_to_db(url, data):
 
 def main():
     url = get_input()
-    host_name = check_host_name(url)
-
+    check_host_name(url)
     qualifications = scrap_data(url)
 
 
