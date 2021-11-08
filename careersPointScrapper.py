@@ -100,5 +100,5 @@ def qualifications_scrapping(URL):
         worker_results = executor.map(cps_worker, job_links)
         for result in worker_results:
             data.append(result)
-    prt_dev(time.time() - t, "seconds")
+    prt_dev("Process took", time.time() - t, "seconds")
     return data
