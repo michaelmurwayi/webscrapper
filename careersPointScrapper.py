@@ -5,6 +5,7 @@ import urllib
 import re
 from common import prt_dev
 from common import cps_worker
+from common.common import Colors
 import db
 import time
 # function to build URI
@@ -85,7 +86,8 @@ def get_next_page(URL):
 
 
 def qualifications_scrapping(URL):
-    prt_dev("Staring jobs...")
+
+    prt_dev("Staring jobs...", f"{Colors.OKGREEN}INFO")
     t = time.time()
     URL = get_job_url(URL)
 

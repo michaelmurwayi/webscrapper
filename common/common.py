@@ -1,9 +1,16 @@
 ENV = "dev"
 
 
-def prt_dev(string):
+def prt_dev(string, *args):
     if(ENV == "dev"):
-        print(f"{Colors.BOLD}{Colors.OKBLUE}DEV:{Colors.ENDC}{string}")
+        tmp_str = ""
+        for x, arg in enumerate(args):
+            if x != len(args):
+                tmp_str += " " + str(arg)
+            else:
+                tmp_str += str(arg)
+
+        print(f"{Colors.BOLD}{Colors.OKBLUE}DEV: {Colors.ENDC}{string}{tmp_str}")
 
 
 class Colors:
