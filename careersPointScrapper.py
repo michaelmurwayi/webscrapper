@@ -3,10 +3,14 @@ from bs4 import BeautifulSoup
 import json
 import urllib
 import re
+from common import prt_dev
+from common import cps_worker
 import db
 import time
 # function to build URI
 from _thread import start_new_thread
+
+import concurrent.futures
 
 
 def get_job_url(base_url):
@@ -24,20 +28,18 @@ def get_job_url(base_url):
     return url
 
 
-def web_scrap_job_links(pagination_list):
-    print(pagination_list)
+def web_scrap_job_links(pagination_link):
     # get list of all jobs on the page
-    link_temp = pagination_list[0]
+    link_temp = pagination_link
 
     job_links = []
-    t = time.time()
 
     error = False
     counter = 0
     page_ = 2
+    complete = []
 
-    x = 1
-
+    # mini workers for link extraction
     def worker(link):
         global error
         global counter
@@ -49,9 +51,9 @@ def web_scrap_job_links(pagination_list):
                 job_links.append(links.get("href"))
         elif page.status_code == 404:
             error = True
-        print("Job done", link)
+        complete.append(link)
 
-    while not error:
+    while not error and counter < 500:
         if counter == 0:
             URL = link_temp
         else:
@@ -62,81 +64,39 @@ def web_scrap_job_links(pagination_list):
         counter += 1
         page_ += 1
 
-    for URL in pagination_list:
-        page = requests.get(URL)
-        if page.status_code == 200:
-            soup = BeautifulSoup(page.content, "html.parser")
-            div = soup.find("div", attrs={"class": "fusion-posts-container"})
-            for links in div.find_all("a"):
-                job_links.append(links.get("href"))
-                # print(job_links)
-    print(time.time() - t)
+    # await threads to finish
+    while len(complete) < 101:
+        pass
+
     return job_links
 
 
-def get_page_pagination(pagination_list):
-    # get all paginated pages in hospitatlity link
-    new = get_next_page(pagination_list[-1], pagination_list)
-    return "done"
-
-
-def get_next_page(URL, pagination_list):
-    # import ipdb
-
-    # ipdb.set_trace()
-    t = time.time()
+def get_next_page(URL):
     page = requests.get(URL)
-    print(time.time() - t)
     if page.status_code == 200:
         soup = BeautifulSoup(page.content, "html.parser")
         try:
             next_page_url = soup.find("a", attrs={"class": "pagination-next"}).get(
                 "href"
             )
-            pagination_list.append(next_page_url)
-        except Exception:
-            return pagination_list
-
-    return pagination_list
+            return next_page_url
+        except:
+            raise Exception("No next page")
 
 
 def qualifications_scrapping(URL):
+    prt_dev("Staring jobs...")
+    t = time.time()
     URL = get_job_url(URL)
-    pagination_links = []
-    pagination_list = get_next_page(URL, pagination_links)
-    print(pagination_list)
-    # get lists of all hospitality jobs available
-    job_links = web_scrap_job_links(pagination_list)
-    # Get all individual links from link
-    # make a request to get page data
+
+    pagination_link = get_next_page(URL)
+    job_links = web_scrap_job_links(pagination_link)
+
     data = []
-    for link in job_links:
 
-        page = requests.get(link)
-
-        # check url status code and proceed if code is 200 else terminate program
-        if page.status_code == 200:
-            soup = BeautifulSoup(page.content, "html.parser")
-            try:
-
-                qualification_list = soup.find(
-                    id="content").find_all("ul")[1].text
-                results = {
-                    "url": link,
-                    "Qualification": qualification_list.split("\n")[1:-1],
-                }
-                data.append(results)
-            except IndexError:
-                results = {"url": link,
-                           "Qualification": "Problem with this link"}
-        else:
-            print("something went wrong, please check provided URL")
-            data = {}
-
+    with concurrent.futures.ThreadPoolExecutor(max_workers=len(job_links)) as executor:
+        worker_results = executor.map(cps_worker, job_links)
+        for result in worker_results:
+            data.append(result)
+    prt_dev(time.time() - t, "seconds")
     return data
-
-
-# if __name__ == "__main__":
-#     base_url = "https://www.careerpointkenya.co.ke"
-
-#     data = qualifications_scrapping(URL)
