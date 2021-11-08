@@ -4,15 +4,20 @@ import json
 import urllib
 import re
 import db
+import time
 
+from _thread import start_new_thread
 
 # function to build URI
+
+
 def get_job_url(base_url):
     # scrap hospitality link from home page job category
     page = requests.get(base_url)
     if page.status_code == 200:
         soup = BeautifulSoup(page.content, "html.parser")
-        div = soup.find("section", {"id": "jobs-by-job-function"}).find_all("a")
+        div = soup.find(
+            "section", {"id": "jobs-by-job-function"}).find_all("a")
         for index, items in enumerate(div):
             search = "Hospitality"
             data, index = re.findall(r"\b" + search + r"\b", str(items)), index
@@ -38,15 +43,18 @@ def web_scrap_job_links(pagination_list):
             for links in div:
                 job_links.append(links.get("href"))
     else:
+        t = time.time()
         for URL in pagination_list:
             page = requests.get(URL)
             if page.status_code == 200:
                 soup = BeautifulSoup(page.content, "html.parser")
-                div = soup.find("div", attrs={"class": "fusion-posts-container"})
+                div = soup.find(
+                    "div", attrs={"class": "fusion-posts-container"})
                 for links in div.find_all("a"):
 
                     job_links.append(links.get("href"))
                     # print(job_links)
+        print(time.time() - t)
     return job_links
 
 
@@ -81,7 +89,8 @@ def qualifications_scrapping(base_url):
     pagination_list = get_next_page(URL, pagination_links)
     # get lists of all hospitality jobs available
     job_links = web_scrap_job_links(pagination_list)
-    filtered_links = [link for link in job_links if link.startswith("https://")]
+    filtered_links = [
+        link for link in job_links if link.startswith("https://")]
     # Get all individual links from link
     # make a request to get page data
 
@@ -96,7 +105,8 @@ def qualifications_scrapping(base_url):
             try:
 
                 qualification_list = (
-                    soup.find("div", "description-content__content").find("ul").text
+                    soup.find(
+                        "div", "description-content__content").find("ul").text
                 )
 
                 results = {
@@ -105,15 +115,17 @@ def qualifications_scrapping(base_url):
                 }
                 data.append(results)
             except Exception:
-                results = {"url": link, "Qualification": "Problem with this link"}
+                results = {"url": link,
+                           "Qualification": "Problem with this link"}
         else:
             print("something went wrong, please check provided URL")
             data = {}
 
-    table = URL.split(".")[1]
-    db.create_table(table)
-    for items in data:
-        data = items["Qualification"]
-        db.insert_data(table, data)
-    db.show_data(table)
-    return data
+    # table = URL.split(".")[1]
+    # db.create_table(table)
+    # for items in data:
+    #     data = items["Qualification"]
+    #     db.insert_data(table, data)
+    # db.show_data(table)
+    # return data
+    return None

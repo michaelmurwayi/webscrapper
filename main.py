@@ -3,7 +3,7 @@ import requests
 import schedule
 import time
 import db
-import brighterMondayScrapper
+from brightMondayScrapper import qualifications_scrapping
 import careersPointScrapper
 import jobsMagScrapper
 import jobInKenya
@@ -93,7 +93,8 @@ def scrap_data(url):
             save_qualifications_to_db(url, data)
             save_urls_to_db(url, data)
 
-        return data
+
+    #     return data
 
     else:
         print("no module yet for this website. We are working on it")
@@ -112,6 +113,7 @@ def save_qualifications_to_db(url, data):
     return "data inserted"
 
 
+
 def save_urls_to_db(url, data):
 
     table = url.split(".")[1] + "_url"
@@ -126,8 +128,6 @@ def save_urls_to_db(url, data):
 def main(url):
 
     host_name = check_host_name(url)
-    qualifications = scrap_data(url)
-
 
 url_list = [
     "https://www.myjobmag.co.ke/",
