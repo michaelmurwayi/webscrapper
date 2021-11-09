@@ -3,10 +3,11 @@ from bs4 import BeautifulSoup
 import json
 import urllib
 import re
-import db
+from common import workers
 import time
-
+import concurrent.futures
 from _thread import start_new_thread
+from common import bms_worker
 
 # function to build URI
 
@@ -16,8 +17,7 @@ def get_job_url(base_url):
     page = requests.get(base_url)
     if page.status_code == 200:
         soup = BeautifulSoup(page.content, "html.parser")
-        div = soup.find(
-            "section", {"id": "jobs-by-job-function"}).find_all("a")
+        div = soup.find("section", {"id": "jobs-by-job-function"}).find_all("a")
         for index, items in enumerate(div):
             search = "Hospitality"
             data, index = re.findall(r"\b" + search + r"\b", str(items)), index
@@ -48,8 +48,7 @@ def web_scrap_job_links(pagination_list):
             page = requests.get(URL)
             if page.status_code == 200:
                 soup = BeautifulSoup(page.content, "html.parser")
-                div = soup.find(
-                    "div", attrs={"class": "fusion-posts-container"})
+                div = soup.find("div", attrs={"class": "fusion-posts-container"})
                 for links in div.find_all("a"):
 
                     job_links.append(links.get("href"))
@@ -89,43 +88,18 @@ def qualifications_scrapping(base_url):
     pagination_list = get_next_page(URL, pagination_links)
     # get lists of all hospitality jobs available
     job_links = web_scrap_job_links(pagination_list)
-    filtered_links = [
-        link for link in job_links if link.startswith("https://")]
+    filtered_links = [link for link in job_links if link.startswith("https://")]
     # Get all individual links from link
     # make a request to get page data
 
     data = []
 
-    for link in filtered_links:
-        page = requests.get(link)
+    with concurrent.futures.ThreadPoolExecutor(
+        max_workers=len(filtered_links)
+    ) as executor:
+        workers_result = executor.map(bms_worker, filtered_links)
 
-        # check url status code and proceed if code is 200 else terminate program
-        if page.status_code == 200:
-            soup = BeautifulSoup(page.content, "html.parser")
-            try:
+        for results in workers_result:
+            data.append(results)
 
-                qualification_list = (
-                    soup.find(
-                        "div", "description-content__content").find("ul").text
-                )
-
-                results = {
-                    "url": link,
-                    "Qualification": qualification_list.split(","),
-                }
-                data.append(results)
-            except Exception:
-                results = {"url": link,
-                           "Qualification": "Problem with this link"}
-        else:
-            print("something went wrong, please check provided URL")
-            data = {}
-
-    # table = URL.split(".")[1]
-    # db.create_table(table)
-    # for items in data:
-    #     data = items["Qualification"]
-    #     db.insert_data(table, data)
-    # db.show_data(table)
-    # return data
-    return None
+    return data

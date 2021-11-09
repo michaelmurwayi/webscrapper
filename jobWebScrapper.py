@@ -3,7 +3,8 @@ from bs4 import BeautifulSoup
 import json
 import urllib
 import re
-import db
+import concurrent.futures
+from common import jws_worker
 
 
 # function to build URI
@@ -103,38 +104,11 @@ def qualifications_scrapping(base_url):
 
     data = []
 
-    # Get all individual links from link
-    for link in filtered_links:
-        if check_if_link_already_scrapped(link, table):
-            print("qualifications already scrapped from link")
-        else:
-            print(f"scrapping data from {link}")
-            page = requests.get(link)
-            # make a request to get page data
-
-            # check url status code and proceed if code is 200 else terminate program
-            if page.status_code == 200:
-                soup = BeautifulSoup(page.content, "html.parser")
-                try:
-
-                    qualification_list = [
-                        items.text
-                        for items in soup.find(
-                            "div", {"class": "job-details"}
-                        ).find_all("li")
-                    ]
-
-                    results = {
-                        "url": link,
-                        "Qualification": qualification_list,
-                    }
-                    data.append(results)
-
-                except Exception:
-                    results = {"url": link, "Qualification": "Problem with this link"}
-                    print(results)
-            else:
-                print("something went wrong, please check provided URL")
-                data = {}
+    with concurrent.futures.ThreadPoolExecutor(
+        max_workers=len(filtered_links)
+    ) as executor:
+        workers_result = executor.map(jws_worker, job_links)
+        for result in workers_result:
+            data.append(result)
 
     return data

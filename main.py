@@ -2,12 +2,12 @@ import sys
 import requests
 import schedule
 import time
-import db
-from brightMondayScrapper import qualifications_scrapping
-import careersPointScrapper
-import jobsMagScrapper
-import jobInKenya
-import jobWebScrapper
+from common import qual_insert, url_insert, create_table
+from brightMondayScrapper import qualifications_scrapping as bms
+from careersPointScrapper import qualifications_scrapping as cps
+from jobsMagScrapper import qualifications_scrapping as jms
+from jobInKenya import qualifications_scrapping as jks
+from jobWebScrapper import qualifications_scrapping as jws
 
 
 def get_input():
@@ -35,7 +35,7 @@ def scrap_data(url):
     # pick which module to use based on hostname provided
     if host_name == "brightermonday":
         # brighter monday scrapper module
-        data = brighterMondayScrapper.qualifications_scrapping(url)
+        data = bms(url)
 
         if len(data) == 0:
             print("no qualifications to save")
@@ -47,7 +47,7 @@ def scrap_data(url):
 
     elif host_name == "careerpointkenya":
         #  use careers point scrapper module
-        data = careersPointScrapper.qualifications_scrapping(url)
+        data = cps(url)
 
         if len(data) == 0:
             print("no qualifications to save")
@@ -59,7 +59,7 @@ def scrap_data(url):
 
     elif host_name == "myjobmag":
         # use my job mag scrapper module
-        data = jobsMagScrapper.qualifications_scrapping(url)
+        data = jms(url)
 
         if len(data) == 0:
             print("no qualifications to save")
@@ -72,27 +72,26 @@ def scrap_data(url):
     elif host_name == "jobsinkenya":
         # use my job mag scrapper module
         print(f"Scrapping data from {url}")
-        data = jobInKenya.qualifications_scrapping(url)
+        data = jks(url)
 
         if len(data) == 0:
             print("no qualifications to save")
         else:
             save_qualifications_to_db(url, data)
-            save_urls_to_db(url, data)
+            # save_urls_to_db(url, data)
 
         return data
 
     elif host_name == "jobwebkenya":
         # use my job web kenya scrapper module
         print(f"Scrapping data from {url}")
-        data = jobWebScrapper.qualifications_scrapping(url)
+        data = jws(url)
 
         if len(data) == 0:
             print("no qualifications to save")
         else:
             save_qualifications_to_db(url, data)
-            save_urls_to_db(url, data)
-
+            # save_urls_to_db(url, data)
 
     #     return data
 
@@ -105,22 +104,28 @@ def save_qualifications_to_db(url, data):
     # save all scrapped qualifications in sqlite db
 
     table = url.split(".")[1]
-    db.create_table(table)
+    create_table(table)
+
     for items in data:
-        data = items["Qualification"]
-        db.insert_qualifications_data(table, data)
+        try:
+            data = items["Qualification"]
+            qual_insert(table, data)
+        except Exception:
+            pass
 
     return "data inserted"
-
 
 
 def save_urls_to_db(url, data):
 
     table = url.split(".")[1] + "_url"
-    db.create_table(table)
+    create_table(table)
     for items in data:
-        data = items["url"]
-        db.insert_url_data(table, data)
+        try:
+            data = items["url"]
+            url_insert(table, data)
+        except Exception:
+            pass
 
     return "data inserted"
 
@@ -128,6 +133,8 @@ def save_urls_to_db(url, data):
 def main(url):
 
     host_name = check_host_name(url)
+    scrap_data(url)
+
 
 url_list = [
     "https://www.myjobmag.co.ke/",
@@ -137,9 +144,5 @@ url_list = [
     "https://www.jobwebkenya.com/",
 ]
 
-
-schedule.every().day.at("07:30").do(main(url_list[0]))
-schedule.every().day.at("08:00").do(main(url_list[1]))
-schedule.every().day.at("08:30").do(main(url_list[2]))
-schedule.every().day.at("09:00").do(main(url_list[3]))
-schedule.every().day.at("09:30").do(main(url_list[4]))
+if __name__ == "__main__":
+    main(url_list[4])

@@ -18,7 +18,7 @@ def create_table(
     )
 
 
-def insert_qualifications_data(table, qualifications):
+def qual_insert(table, qualifications):
     #  inserting qualifications into database
 
     for items in qualifications:
@@ -26,9 +26,8 @@ def insert_qualifications_data(table, qualifications):
         connect().insert(table, data)
 
 
-def insert_url_data(table, urls):
+def url_insert(table, urls):
     #  inserting scrapped url list to database
-
 
     data = (urls, datetime.datetime.now())
     connect().insert(table, data)

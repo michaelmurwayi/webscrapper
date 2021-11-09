@@ -3,7 +3,6 @@ from bs4 import BeautifulSoup
 import json
 import urllib
 import re
-import db
 
 # function to build URI
 def get_job_url(base_url):
