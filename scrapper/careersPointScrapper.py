@@ -44,18 +44,17 @@ def web_scrap_job_links(pagination_link):
     def worker(link):
         global error
         global counter
-
         page = requests.get(link)
         if page.status_code == 200:
             soup = BeautifulSoup(page.content, "html.parser")
             div = soup.find("div", attrs={"class": "fusion-posts-container"})
             for links in div.find_all("a"):
                 job_links.append(links.get("href"))
-
         elif page.status_code == 404:
             error = True
+        complete.append(link)
 
-    while not error and counter < 100:
+    while not error and counter < 500:
         if counter == 0:
             URL = link_temp
         else:
@@ -101,5 +100,5 @@ def qualifications_scrapping(URL):
         worker_results = executor.map(cps_worker, job_links)
         for result in worker_results:
             data.append(result)
-
+    prt_dev("Process took", time.time() - t, "seconds")
     return data

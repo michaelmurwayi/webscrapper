@@ -3,18 +3,7 @@ import requests
 import schedule
 import time
 from common import qual_insert, url_insert, create_table
-from brightMondayScrapper import qualifications_scrapping as bms
-from careersPointScrapper import qualifications_scrapping as cps
-from jobsMagScrapper import qualifications_scrapping as jms
-from jobInKenya import qualifications_scrapping as jks
-from jobWebScrapper import qualifications_scrapping as jws
-
-
-def get_input():
-    # get input from the terminal, input is passed during script running
-
-    url = sys.argv[1]
-    return url
+from scrapper import bms, cps, jks, jws, jms
 
 
 def check_host_name(url):
@@ -37,11 +26,9 @@ def scrap_data(url):
         # brighter monday scrapper module
         data = bms(url)
 
-        if len(data) == 0:
-            print("no qualifications to save")
-        else:
-            save_qualifications_to_db(url, data)
-            save_urls_to_db(url, data)
+        'print("no qualifications to save")' if len(
+            data
+        ) == 0 else "save_qualifications_to_db(url, data) ,save_urls_to_db(url, data)"
 
         return data
 
@@ -49,11 +36,9 @@ def scrap_data(url):
         #  use careers point scrapper module
         data = cps(url)
 
-        if len(data) == 0:
-            print("no qualifications to save")
-        else:
-            save_qualifications_to_db(url, data)
-            save_urls_to_db(url, data)
+        'print("no qualifications to save")' if len(
+            data
+        ) == 0 else "save_qualifications_to_db(url, data) ,save_urls_to_db(url, data)"
 
         return data
 
@@ -61,11 +46,9 @@ def scrap_data(url):
         # use my job mag scrapper module
         data = jms(url)
 
-        if len(data) == 0:
-            print("no qualifications to save")
-        else:
-            save_qualifications_to_db(url, data)
-            save_urls_to_db(url, data)
+        'print("no qualifications to save")' if len(
+            data
+        ) == 0 else "save_qualifications_to_db(url, data) ,save_urls_to_db(url, data)"
 
         return data
 
@@ -145,4 +128,4 @@ url_list = [
 ]
 
 if __name__ == "__main__":
-    main(url_list[4])
+    main(url_list[1])

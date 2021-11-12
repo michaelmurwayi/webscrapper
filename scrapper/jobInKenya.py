@@ -3,6 +3,8 @@ from bs4 import BeautifulSoup
 import json
 import urllib
 import re
+import concurrent.futures
+from common import jks_worker
 
 # function to build URI
 def get_job_url(base_url):
@@ -10,6 +12,9 @@ def get_job_url(base_url):
     page = requests.get(base_url)
     if page.status_code == 200:
         soup = BeautifulSoup(page.content, "html.parser")
+        import ipdb
+
+        ipdb.set_trace()
         div = soup.find("ul", {"class": "dcw"}).find("li", {"class": "cat-item-27"})
         url = (
             str(div)
@@ -84,21 +89,6 @@ def get_next_page(URL, pagination_list):
     return pagination_list
 
 
-def check_if_link_already_scrapped(url, table):
-    # check if link about to scan is already in db
-    # ignore link if in database
-    # scrapp link if not in database
-    stored_links = db.get_records(table)
-    if stored_links:
-        for items in stored_links:
-            if url in items:
-                return True
-            else:
-                return False
-    else:
-        return False
-
-
 def qualifications_scrapping(base_url):
     # table for storage of scrapped links
     table = base_url.split(".")[1] + "_url"
@@ -114,32 +104,9 @@ def qualifications_scrapping(base_url):
     # Get all individual links from link
     # make a request to get page data
     data = []
-    for link in job_links:
-        if check_if_link_already_scrapped(link, table):
-            print("qualifications already scrapped from link")
-        else:
-            print(f"scrapping data from {link}")
-            page = requests.get(link)
-
-            # check url status code and proceed if code is 200 else terminate program
-            if page.status_code == 200:
-                soup = BeautifulSoup(page.content, "html.parser")
-                try:
-
-                    qualification_list = (
-                        soup.find("div", {"class": "entry-content"})
-                        .find_all("ul")[1]
-                        .text.split("\n")[1:-1]
-                    )
-                    results = {
-                        "url": link,
-                        "Qualification": qualification_list,
-                    }
-                    data.append(results)
-                except IndexError:
-                    results = {"url": link, "Qualification": "Problem with this link"}
-            else:
-                print("something went wrong, please check provided URL")
-                data = {}
+    with concurrent.futures.ThreadPoolExecutor(max_workers=len(job_links)) as executor:
+        worker_results = executor.map(jks_worker, job_links)
+        for result in worker_results:
+            data.append(result)
 
     return data

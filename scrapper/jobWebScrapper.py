@@ -74,19 +74,19 @@ def get_next_page(URL, pagination_list):
     return pagination_list
 
 
-def check_if_link_already_scrapped(url, table):
-    # check if link about to scan is already in db
-    # ignore link if in database
-    # scrapp link if not in database
-    stored_links = db.get_records(table)
-    if stored_links:
-        for items in stored_links:
-            if url in items:
-                return True
-            else:
-                return False
-    else:
-        return False
+# def check_if_link_already_scrapped(url, table):
+#     # check if link about to scan is already in db
+#     # ignore link if in database
+#     # scrapp link if not in database
+#     stored_links = db.get_records(table)
+#     if stored_links:
+#         for items in stored_links:
+#             if url in items:
+#                 return True
+#             else:
+#                 return False
+#     else:
+#         return False
 
 
 def qualifications_scrapping(base_url):

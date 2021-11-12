@@ -21,7 +21,6 @@ def cps_worker(link):
         except IndexError:
             prt_dev("Job complete", link)
             results = {"url": link, "Qualification": "Problem with this link"}
-            return results
 
 
 def bms_worker(link):
@@ -72,3 +71,29 @@ def jws_worker(link):
             results = {"url": link, "Qualification": "Problem with this link"}
     else:
         prt_dev("something went wrong, please check provided URL", link)
+
+
+def jks_worker(link):
+    page = requests.get(link)
+
+    # check url status code and proceed if code is 200 else terminate program
+    if page.status_code == 200:
+        soup = BeautifulSoup(page.content, "html.parser")
+        try:
+
+            qualification_list = (
+                soup.find("div", {"class": "entry-content"})
+                .find_all("ul")[1]
+                .text.split("\n")[1:-1]
+            )
+            results = {
+                "url": link,
+                "Qualification": qualification_list,
+            }
+            prt_dev("Job Complete", link)
+            return results
+        except IndexError:
+            results = {"url": link, "Qualification": "Problem with this link"}
+    else:
+        print("something went wrong, please check provided URL")
+        data = {}
