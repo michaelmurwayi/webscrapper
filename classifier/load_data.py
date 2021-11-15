@@ -10,11 +10,6 @@ Produces a dataset for all stored data
 """
 
 
-table = "brightermonday"
-
-tables = ["brightermonday", "careerpointkenya", "jobwebkenya"]
-
-
 def load_single_table_data(table):
     # read data from single table in the database
 
@@ -39,7 +34,3 @@ def load_all_table_data(tables):
 
     return data_set
 
-
-# load_single_table_data(table)
-
-load_all_table_data(tables)
