@@ -5,11 +5,6 @@ from load_data import load_all_table_data
 stemmer = PorterStemmer()
 nltk.download('punkt')
 
-tables = ["brightermonday", "careerpointkenya", "jobwebkenya"]
-
-
-sentences  = load_all_table_data(tables)
-
 
 def stem_sentence(sentences):
     stemmed_sent = []
@@ -20,4 +15,3 @@ def stem_sentence(sentences):
     
     return(stemmed_sent)
 
-stem_sentence(sentences)
